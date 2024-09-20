@@ -4,7 +4,6 @@ import java.io.IOException;
 import org.apache.spark.launcher.SparkAppHandle;
 import org.apache.spark.launcher.SparkLauncher;
 
-/** Hello world! */
 public class Launcher {
   public static synchronized void main(String[] args) throws IOException, InterruptedException {
     System.setProperty("java.util.logging.SimpleFormatter.format", "%5$s%6$s%n");
@@ -22,18 +21,9 @@ public class Launcher {
               @Override
               public void stateChanged(SparkAppHandle handle) {
                 synchronized (handle) {
-                  System.out.println(
-                      "Thread " + Thread.currentThread().getName() + " acquired lock...");
-                  System.out.println(
-                      "State changed to "
-                          + handle.getState()
-                          + " on thread "
-                          + Thread.currentThread().getName());
                   if (handle.getState().isFinal()) {
                     handle.notifyAll();
                   }
-                  System.out.println(
-                      "Thread " + Thread.currentThread().getName() + " released lock...");
                 }
               }
 
@@ -44,16 +34,16 @@ public class Launcher {
             });
 
     synchronized (handle) {
-      System.out.println("Thread: " + Thread.currentThread().getName() + " is waiting...");
+      // if the job fails, it goes into FINISHED state first and then FAILED
+      // to make sure we wait for the failing condition, we are waiting twice
+      // if it does not fail, the second .wait() call will timeout after
+      // 1 second
       handle.wait();
-      System.out.println("Thread: " + Thread.currentThread().getName() + " resumed.");
-      System.out.println("Thread: " + Thread.currentThread().getName() + " is waiting again.");
       handle.wait(1000);
-      System.out.println("Thread: " + Thread.currentThread().getName() + " resumed.");
     }
 
     if (handle.getError().isPresent()) {
-      System.out.println(handle.getError().get().getLocalizedMessage());
+      System.err.println(handle.getError().get().getLocalizedMessage());
     }
   }
 }
