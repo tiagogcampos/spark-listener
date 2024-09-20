@@ -4,3 +4,4 @@
 target
 error.log
 .classpath
+.metals
