@@ -2,6 +2,10 @@
 .settings
 .project
 target
-error.log
 .classpath
 .metals
+logs
+*.sqlite
+*.db
+*.log
+*.jar
